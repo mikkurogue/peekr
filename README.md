@@ -29,7 +29,7 @@ A Neovim plugin that provides a floating peek UI for LSP locations -- definition
 
 ```lua
 {
-  'glance/peekr',
+  'mikkurogue/peekr',
   event = 'LspAttach',
   opts = {
     -- your configuration here
@@ -41,7 +41,7 @@ A Neovim plugin that provides a floating peek UI for LSP locations -- definition
 
 ```lua
 use {
-  'glance/peekr',
+  'mikkurogue/peekr',
   config = function()
     require('peekr').setup({
       -- your configuration here
@@ -52,17 +52,10 @@ use {
 
 ### Native package manager (Neovim 0.12+)
 
-Clone the repository into your packages directory:
-
-```sh
-git clone https://github.com/glance/peekr.git \
-  ~/.local/share/nvim/site/pack/plugins/opt/peekr
-```
-
-Then load and configure it in your `init.lua`:
+Add the following to your `init.lua`:
 
 ```lua
-vim.pack.add('peekr')
+vim.pack.add({ src = 'https://github.com/mikkurogue/peekr' })
 require('peekr').setup({
   -- your configuration here
 })
