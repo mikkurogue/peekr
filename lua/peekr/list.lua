@@ -230,6 +230,7 @@ end
 
 function List:render_locations(locations, renderer, indent)
   local opts = config.options
+  local win_width = vim.api.nvim_win_get_width(self.winnr)
   for _, loc in ipairs(locations) do
     self.items[renderer.line_nr + 1] = loc
     local prefix = ' '
@@ -237,14 +238,35 @@ function List:render_locations(locations, renderer, indent)
       prefix = (' %s  '):format(opts.indent_lines.icon)
     end
     renderer:append(prefix, 'Indent')
-    if loc.preview_line then
-      local pl = loc.preview_line.value
-      renderer:append(pl.before)
-      renderer:append(pl.inside, 'ListMatch')
-      renderer:append(pl.after)
-    else
-      renderer:append(loc.full_text)
+
+    local tail = vim.fn.fnamemodify(loc.filename, ':t')
+    local suffix = (':%d:%d'):format(loc.start_line + 1, loc.start_col + 1)
+    local entry = tail .. suffix
+    local avail = win_width - vim.fn.strdisplaywidth(prefix)
+    if vim.fn.strdisplaywidth(entry) > avail then
+      -- Truncate filename from the right, keeping the suffix visible
+      local suffix_w = vim.fn.strdisplaywidth(suffix)
+      local ellipsis = '…'
+      local ellipsis_w = vim.fn.strdisplaywidth(ellipsis)
+      local max_name_w = avail - suffix_w - ellipsis_w
+      if max_name_w > 0 then
+        -- Trim tail to fit
+        local trimmed = ''
+        local w = 0
+        for i = 1, #tail do
+          local ch = tail:sub(i, i)
+          local cw = vim.fn.strdisplaywidth(ch)
+          if w + cw > max_name_w then break end
+          trimmed = trimmed .. ch
+          w = w + cw
+        end
+        entry = trimmed .. ellipsis .. suffix
+      else
+        entry = ellipsis .. suffix
+      end
     end
+
+    renderer:append(entry, 'ListFilename')
     renderer:nl()
   end
 end
