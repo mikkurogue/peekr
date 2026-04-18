@@ -32,21 +32,32 @@ local function get_layout()
   local editor_w = vim.o.columns
   local editor_h = vim.o.lines - vim.o.cmdheight - 1 -- subtract statusline/cmdline
 
-  -- Total float dimensions
+  -- Determine border size so inner windows sit inside the backdrop border
+  local border = opts.border
+  local bdr = 0
+  if border and border ~= 'none' and border ~= 'shadow' then
+    bdr = 1
+  end
+
+  -- Total float dimensions (this is the backdrop *content* area)
   local total_w = math.floor(editor_w * opts.width)
   local total_h = math.min(opts.height, editor_h - 4) -- leave some breathing room
 
-  -- Center it
-  local row = math.floor((editor_h - total_h) / 2)
-  local col = math.floor((editor_w - total_w) / 2)
+  -- Center the bordered backdrop visually (account for border cells)
+  local row = math.floor((editor_h - (total_h + 2 * bdr)) / 2)
+  local col = math.floor((editor_w - (total_w + 2 * bdr)) / 2)
+
+  -- Inner windows live inside the backdrop content area, offset by the border
+  local inner_row = row + bdr
+  local inner_col = col + bdr
 
   -- List and preview widths (inside the float, no border counted)
   local list_w = math.floor(total_w * opts.list.width)
   local preview_w = total_w - list_w - 1 -- -1 for the separator
 
   local lpos = opts.list.position
-  local list_col = lpos == 'left' and col or (col + preview_w + 1)
-  local preview_col = lpos == 'left' and (col + list_w + 1) or col
+  local list_col = lpos == 'left' and inner_col or (inner_col + preview_w + 1)
+  local preview_col = lpos == 'left' and (inner_col + list_w + 1) or inner_col
 
   return {
     total_w = total_w,
@@ -55,7 +66,7 @@ local function get_layout()
       relative = 'editor',
       width = list_w,
       height = total_h,
-      row = row,
+      row = inner_row,
       col = list_col,
       zindex = opts.zindex,
       border = 'none',
@@ -65,7 +76,7 @@ local function get_layout()
       relative = 'editor',
       width = preview_w,
       height = total_h,
-      row = row,
+      row = inner_row,
       col = preview_col,
       zindex = opts.zindex,
       border = 'none',
@@ -83,6 +94,8 @@ local function get_layout()
     },
     row = row,
     col = col,
+    inner_row = inner_row,
+    inner_col = inner_col,
   }
 end
 
@@ -280,13 +293,13 @@ function Peekr:create(opts)
   vim.api.nvim_buf_set_lines(sep_buf, 0, -1, false, sep_lines)
 
   local sep_col = config.options.list.position == 'left'
-    and (layout.col + layout.list.width)
-    or (layout.col + layout.preview.width)
+    and (layout.inner_col + layout.list.width)
+    or (layout.inner_col + layout.preview.width)
   local sep_win = vim.api.nvim_open_win(sep_buf, false, {
     relative = 'editor',
     width = 1,
     height = layout.total_h,
-    row = layout.row,
+    row = layout.inner_row,
     col = sep_col,
     zindex = config.options.zindex,
     style = 'minimal',
@@ -323,11 +336,11 @@ function Peekr:on_resize()
   pcall(vim.api.nvim_win_set_config, self.backdrop_win, layout.backdrop)
 
   local sep_col = config.options.list.position == 'left'
-    and (layout.col + layout.list.width)
-    or (layout.col + layout.preview.width)
+    and (layout.inner_col + layout.list.width)
+    or (layout.inner_col + layout.preview.width)
   pcall(vim.api.nvim_win_set_config, self.sep_win, {
     relative = 'editor', width = 1, height = layout.total_h,
-    row = layout.row, col = sep_col,
+    row = layout.inner_row, col = sep_col,
   })
 end
 
