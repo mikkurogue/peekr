@@ -11,7 +11,9 @@ function Winbar:append(key, group)
 end
 
 function Winbar:render(values)
-  if vim.deep_equal(values, self.last_values) then return end
+  if vim.deep_equal(values, self.last_values) then
+    return
+  end
   local s = ''
   for section, value in pairs(values) do
     s = ('%s%%#%s# %s'):format(s, self.sections[section], value)

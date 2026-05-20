@@ -9,7 +9,7 @@ M.hl_ns = 'Peekr'
 function M.setup(user_config, actions)
   local defaults = {
     height = 20,
-    width = 0.75,       -- fraction of editor width
+    width = 0.75, -- fraction of editor width
     zindex = 50,
     border = 'rounded', -- any nvim border spec: 'rounded', 'single', 'double', 'solid', etc.
     preview_win_opts = {
@@ -19,7 +19,7 @@ function M.setup(user_config, actions)
     },
     list = {
       position = 'left',
-      width = 0.30,     -- fraction of the float width
+      width = 0.30, -- fraction of the float width
     },
     treesitter = {
       enable = true,

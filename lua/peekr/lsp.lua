@@ -119,7 +119,7 @@ local function create_handler(method)
     -- Some methods (callHierarchy) need a prepare step first
     if prepare then
       vim.lsp.buf_request_all(bufnr, prepare, params, function(responses)
-        for client_id, resp in pairs(responses) do
+        for _, resp in pairs(responses) do
           if resp.result and not vim.tbl_isempty(resp.result) then
             local item = vim.islist(resp.result) and resp.result[1] or resp.result
             vim.lsp.buf_request_all(bufnr, lsp_method, { item = item }, function(call_responses)
@@ -140,8 +140,8 @@ local function create_handler(method)
     end
 
     -- Standard single-step request
-    local _ids, cancel
-    _ids, cancel = vim.lsp.buf_request(bufnr, lsp_method, params, function(err, result, ctx)
+    local _, cancel -- luacheck: ignore 211
+    _, cancel = vim.lsp.buf_request(bufnr, lsp_method, params, function(err, result, ctx)
       if err and not method.non_standard then
         utils.error(('Error requesting %s: %s'):format(method.label, err.message))
       end
@@ -150,7 +150,9 @@ local function create_handler(method)
         cb({})
         return
       end
-      if cancel then cancel() end
+      if cancel then
+        cancel()
+      end
       result = vim.islist(result) and result or { result }
       handle_results(result, ctx)
     end)

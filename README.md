@@ -288,6 +288,14 @@ All highlight groups are prefixed with `Peekr` and use `default = true`, so they
 | `PeekrWinBarFilepath` | `Comment` |
 | `PeekrWinBarTitle` | `FloatTitle` |
 
+## Known limitations
+
+- Requires **Neovim >= 0.12**; older versions are not supported.
+- Preview highlighting depends on Tree-sitter parsers being installed for the target language.
+- Only one Peekr session can be open at a time.
+- The plugin does not handle LSP servers that return partial/streaming results.
+- Workspace symbols query is based on `<cword>` -- there is no interactive prompt for the query string.
+
 ## API
 
 ```lua

@@ -26,9 +26,17 @@ local base_win_opts = {
 }
 
 local float_only_opts = {
-  'number', 'relativenumber', 'cursorline', 'cursorcolumn',
-  'foldcolumn', 'spell', 'list', 'signcolumn', 'colorcolumn',
-  'fillchars', 'winhighlight',
+  'number',
+  'relativenumber',
+  'cursorline',
+  'cursorcolumn',
+  'foldcolumn',
+  'spell',
+  'list',
+  'signcolumn',
+  'colorcolumn',
+  'fillchars',
+  'winhighlight',
 }
 
 local function clear_hl(bufnr)
@@ -41,19 +49,27 @@ end
 --- This is the key difference from glance.nvim — we force treesitter
 --- to provide syntax highlighting in the floating preview buffer.
 local function ensure_treesitter(bufnr)
-  if not config.options.treesitter.enable then return end
+  if not config.options.treesitter.enable then
+    return
+  end
 
   -- Get the filetype of the buffer
   local ft = vim.bo[bufnr].filetype
-  if ft == '' then return end
+  if ft == '' then
+    return
+  end
 
   -- Try to get the language for this filetype
   local lang = vim.treesitter.language.get_lang(ft)
-  if not lang then return end
+  if not lang then
+    return
+  end
 
   -- Check if parser exists
   local ok = pcall(vim.treesitter.language.add, lang)
-  if not ok then return end
+  if not ok then
+    return
+  end
 
   -- Start treesitter highlighting if not already active
   local has_ts = pcall(vim.treesitter.get_parser, bufnr, lang)
@@ -85,12 +101,16 @@ function Preview:new(opts, wopts)
   -- Apply win options using modern API
   for k, v in pairs(wopts) do
     if not vim.tbl_contains(float_only_opts, k) then
-      pcall(function() vim.wo[winnr][k] = v end)
+      pcall(function()
+        vim.wo[winnr][k] = v
+      end)
     end
   end
   for _, k in ipairs(float_only_opts) do
     if wopts[k] ~= nil then
-      pcall(function() vim.wo[winnr][k] = wopts[k] end)
+      pcall(function()
+        vim.wo[winnr][k] = wopts[k]
+      end)
     end
   end
 
@@ -113,7 +133,9 @@ function Preview:is_valid()
 end
 
 function Preview:on_attach_buffer(bufnr)
-  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then return end
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
 
   local throttled, timer = utils.throttle(function()
     if self.current_location and bufnr == self.current_location.bufnr then
@@ -132,7 +154,10 @@ function Preview:on_attach_buffer(bufnr)
 
   self._detach = function()
     pcall(vim.api.nvim_del_autocmd, autocmd_id)
-    if timer then timer:close(); timer = nil end
+    if timer then
+      timer:close()
+      timer = nil
+    end
   end
 
   local kopts = { buffer = bufnr, noremap = true, nowait = true, silent = true }
@@ -142,7 +167,10 @@ function Preview:on_attach_buffer(bufnr)
 end
 
 function Preview:on_detach_buffer(bufnr)
-  if type(self._detach) == 'function' then self._detach(); self._detach = nil end
+  if type(self._detach) == 'function' then
+    self._detach()
+    self._detach = nil
+  end
   if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
     for lhs, _ in pairs(config.options.mappings.preview) do
       pcall(vim.api.nvim_buf_del_keymap, bufnr, 'n', lhs)
@@ -151,8 +179,12 @@ function Preview:on_detach_buffer(bufnr)
 end
 
 function Preview:restore_win_opts()
-  if not vim.api.nvim_win_is_valid(self.parent_winnr) then return end
-  if not vim.api.nvim_win_is_valid(self.winnr) then return end
+  if not vim.api.nvim_win_is_valid(self.parent_winnr) then
+    return
+  end
+  if not vim.api.nvim_win_is_valid(self.winnr) then
+    return
+  end
   for opt, _ in pairs(self._wopts) do
     if not vim.tbl_contains(float_only_opts, opt) then
       pcall(function()
@@ -187,7 +219,9 @@ function Preview:close()
 end
 
 function Preview:clear_hl()
-  for _, bufnr in ipairs(touched_buffers) do clear_hl(bufnr) end
+  for _, bufnr in ipairs(touched_buffers) do
+    clear_hl(bufnr)
+  end
   touched_buffers = {}
 end
 
@@ -200,9 +234,15 @@ function Preview:hl_buf(location)
 end
 
 function Preview:update(item, group)
-  if not vim.api.nvim_win_is_valid(self.winnr) then return end
-  if not item or item.is_group or item.is_unreachable then return end
-  if vim.deep_equal(self.current_location, item) then return end
+  if not vim.api.nvim_win_is_valid(self.winnr) then
+    return
+  end
+  if not item or item.is_group or item.is_unreachable then
+    return
+  end
+  if vim.deep_equal(self.current_location, item) then
+    return
+  end
 
   local cur_buf = (self.current_location or {}).bufnr
 
@@ -213,7 +253,9 @@ function Preview:update(item, group)
 
     -- Re-apply win options
     for k, v in pairs(self._wopts) do
-      pcall(function() vim.wo[self.winnr][k] = v end)
+      pcall(function()
+        vim.wo[self.winnr][k] = v
+      end)
     end
 
     if self.winbar then

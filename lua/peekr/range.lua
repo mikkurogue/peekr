@@ -12,9 +12,15 @@ function Range:new(sl, sc, el, ec)
 end
 
 function Range:contains(pos)
-  if pos.line < self.start_line or pos.line > self.end_line then return false end
-  if pos.line == self.start_line and pos.col < self.start_col then return false end
-  if pos.line == self.end_line and pos.col > self.end_col then return false end
+  if pos.line < self.start_line or pos.line > self.end_line then
+    return false
+  end
+  if pos.line == self.start_line and pos.col < self.start_col then
+    return false
+  end
+  if pos.line == self.end_line and pos.col > self.end_col then
+    return false
+  end
   return true
 end
 

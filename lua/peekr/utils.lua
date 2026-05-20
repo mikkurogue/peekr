@@ -34,15 +34,23 @@ function M.notify(msg, level)
   vim.notify(msg, level or vim.log.levels.INFO, { title = 'Peekr' })
 end
 
-function M.warn(msg) M.notify(msg, vim.log.levels.WARN) end
-function M.error(msg) M.notify(msg, vim.log.levels.ERROR) end
-function M.info(msg) M.notify(msg, vim.log.levels.INFO) end
+function M.warn(msg)
+  M.notify(msg, vim.log.levels.WARN)
+end
+function M.error(msg)
+  M.notify(msg, vim.log.levels.ERROR)
+end
+function M.info(msg)
+  M.notify(msg, vim.log.levels.INFO)
+end
 
 function M.debounce(fn, ms)
   local timer = nil
   return function(...)
     local args = { ... }
-    if timer then timer:stop() end
+    if timer then
+      timer:stop()
+    end
     timer = vim.defer_fn(function()
       fn(unpack(args))
       timer = nil
@@ -55,7 +63,9 @@ function M.throttle(fn, ms)
   local running = false
   local function wrapped(...)
     if not running then
-      timer:start(ms, 0, function() running = false end)
+      timer:start(ms, 0, function()
+        running = false
+      end)
       running = true
       pcall(vim.schedule_wrap(fn), select(1, ...))
     end
@@ -65,7 +75,9 @@ end
 
 function M.tbl_find(t, pred)
   for i, v in ipairs(t) do
-    if pred(v, i) then return v, i end
+    if pred(v, i) then
+      return v, i
+    end
   end
   return nil
 end
@@ -74,9 +86,13 @@ function M.get_line_byte_from_position(line, position, offset_encoding)
   local col = position.character
   if col > 0 then
     local ok, result = pcall(vim.str_byteindex, line, offset_encoding, col)
-    if ok then return result end
+    if ok then
+      return result
+    end
     ok, result = pcall(vim.str_byteindex, line, col, offset_encoding == 'utf-16')
-    if ok then return result end
+    if ok then
+      return result
+    end
     return math.min(#line, col)
   end
   return col
@@ -92,7 +108,9 @@ function M.get_word_until_position(pos, text)
   local re = vim.regex([[\%(-\?\d\+\%(\.\d\+\)\?\|\h\w*\%(-\w*\)*\)]])
   while true do
     local s, e = re:match_str(str)
-    if not s then break end
+    if not s then
+      break
+    end
     match = string.sub(str, s + 1, e)
     index = index + e
     str = string.sub(str, e + 1)
@@ -104,7 +122,9 @@ function M.get_word_until_position(pos, text)
 end
 
 function M.get_value_in_range(start_col, end_col, text)
-  if start_col == end_col then return '' end
+  if start_col == end_col then
+    return ''
+  end
   return string.sub(text, start_col + 1, end_col)
 end
 
@@ -115,7 +135,9 @@ end
 ---@return table<integer, string>|nil
 function M.get_lines(bufnr, uri, rows)
   rows = type(rows) == 'table' and rows or { rows }
-  if bufnr == 0 then bufnr = vim.api.nvim_get_current_buf() end
+  if bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
 
   local function buf_lines()
     local lines = {}
@@ -136,7 +158,9 @@ function M.get_lines(bufnr, uri, rows)
 
   local filename = vim.api.nvim_buf_get_name(bufnr)
   local fd = vim.uv.fs_open(filename, 'r', 438)
-  if not fd then return nil end
+  if not fd then
+    return nil
+  end
   local stat = vim.uv.fs_fstat(fd)
   local data = vim.uv.fs_read(fd, stat.size, 0)
   vim.uv.fs_close(fd)
@@ -144,7 +168,9 @@ function M.get_lines(bufnr, uri, rows)
   local lines = {}
   local rows_needed = 0
   for _, row in pairs(rows) do
-    if not lines[row] then rows_needed = rows_needed + 1 end
+    if not lines[row] then
+      rows_needed = rows_needed + 1
+    end
     lines[row] = true
   end
 
@@ -153,13 +179,17 @@ function M.get_lines(bufnr, uri, rows)
     if lines[lnum] == true then
       lines[lnum] = line
       found = found + 1
-      if found == rows_needed then break end
+      if found == rows_needed then
+        break
+      end
     end
     lnum = lnum + 1
   end
 
   for i, v in pairs(lines) do
-    if v == true then lines[i] = '' end
+    if v == true then
+      lines[i] = ''
+    end
   end
   return lines
 end

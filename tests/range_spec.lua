@@ -1,0 +1,70 @@
+-- Tests for peekr.range
+local Range = require('peekr.range')
+
+describe('Range', function()
+  describe(':new', function()
+    it('stores coordinates in order', function()
+      local r = Range:new(1, 2, 3, 4)
+      assert.are.equal(1, r.start_line)
+      assert.are.equal(2, r.start_col)
+      assert.are.equal(3, r.end_line)
+      assert.are.equal(4, r.end_col)
+    end)
+
+    it('normalises reversed coordinates', function()
+      local r = Range:new(5, 10, 2, 3)
+      assert.are.equal(2, r.start_line)
+      assert.are.equal(3, r.start_col)
+      assert.are.equal(5, r.end_line)
+      assert.are.equal(10, r.end_col)
+    end)
+
+    it('normalises reversed coordinates on same line', function()
+      local r = Range:new(1, 10, 1, 2)
+      assert.are.equal(1, r.start_line)
+      assert.are.equal(2, r.start_col)
+      assert.are.equal(1, r.end_line)
+      assert.are.equal(10, r.end_col)
+    end)
+
+    it('handles equal start and end', function()
+      local r = Range:new(3, 5, 3, 5)
+      assert.are.equal(3, r.start_line)
+      assert.are.equal(5, r.start_col)
+      assert.are.equal(3, r.end_line)
+      assert.are.equal(5, r.end_col)
+    end)
+  end)
+
+  describe(':contains', function()
+    local r = Range:new(2, 5, 4, 10)
+
+    it('returns true for position inside range', function()
+      assert.is_true(r:contains({ line = 3, col = 0 }))
+    end)
+
+    it('returns true for start boundary', function()
+      assert.is_true(r:contains({ line = 2, col = 5 }))
+    end)
+
+    it('returns true for end boundary', function()
+      assert.is_true(r:contains({ line = 4, col = 10 }))
+    end)
+
+    it('returns false for position before range', function()
+      assert.is_false(r:contains({ line = 1, col = 0 }))
+    end)
+
+    it('returns false for position after range', function()
+      assert.is_false(r:contains({ line = 5, col = 0 }))
+    end)
+
+    it('returns false for col before start on start line', function()
+      assert.is_false(r:contains({ line = 2, col = 4 }))
+    end)
+
+    it('returns false for col after end on end line', function()
+      assert.is_false(r:contains({ line = 4, col = 11 }))
+    end)
+  end)
+end)

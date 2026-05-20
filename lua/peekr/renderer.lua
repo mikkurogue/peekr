@@ -4,7 +4,11 @@ Renderer.__index = Renderer
 
 function Renderer:new(bufnr)
   return setmetatable({
-    lines = {}, hl = {}, line_nr = 0, current = '', bufnr = bufnr,
+    lines = {},
+    hl = {},
+    line_nr = 0,
+    current = '',
+    bufnr = bufnr,
   }, self)
 end
 
@@ -20,7 +24,10 @@ function Renderer:append(str, group, append_str)
     group = config.hl_ns .. group
     local from = #self.current
     table.insert(self.hl, {
-      line_nr = self.line_nr, from = from, to = from + #str, group = group,
+      line_nr = self.line_nr,
+      from = from,
+      to = from + #str,
+      group = group,
     })
   end
   self.current = self.current .. str

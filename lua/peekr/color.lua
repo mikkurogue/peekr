@@ -3,9 +3,7 @@ Color.__index = Color
 
 function Color.hex2rgb(hex)
   hex = hex:gsub('#', '')
-  return tonumber(hex:sub(1, 2), 16),
-    tonumber(hex:sub(3, 4), 16),
-    tonumber(hex:sub(5, 6), 16)
+  return tonumber(hex:sub(1, 2), 16), tonumber(hex:sub(3, 4), 16), tonumber(hex:sub(5, 6), 16)
 end
 
 function Color.rgb2hex(r, g, b)
@@ -17,7 +15,9 @@ function Color.rgb2hex(r, g, b)
 end
 
 function Color.hex2luminance(hex)
-  if not hex or hex == 'NONE' then return 0 end
+  if not hex or hex == 'NONE' then
+    return 0
+  end
   local r, g, b = Color.hex2rgb(hex)
   local function lx(x)
     x = x / 255
@@ -28,17 +28,32 @@ end
 
 -- LAB color space for perceptual brightness adjustments
 local LAB = {
-  Kn = 18, Xn = 0.950470, Yn = 1, Zn = 1.088830,
-  t0 = 0.137931034, t1 = 0.206896552, t2 = 0.12841855, t3 = 0.008856452,
+  Kn = 18,
+  Xn = 0.950470,
+  Yn = 1,
+  Zn = 1.088830,
+  t0 = 0.137931034,
+  t1 = 0.206896552,
+  t2 = 0.12841855,
+  t3 = 0.008856452,
 }
 
-local function is_nan(v) return type(v) == 'number' and v ~= v end
+local function is_nan(v)
+  return type(v) == 'number' and v ~= v
+end
 local function xyz_rgb(r)
   return 255 * (r <= 0.00304 and 12.92 * r or 1.055 * math.pow(r, 1 / 2.4) - 0.055)
 end
-local function lab_xyz(t) return t > LAB.t1 and t * t * t or LAB.t2 * (t - LAB.t0) end
-local function rgb_xyz(r) r = r / 255; return r <= 0.04045 and r / 12.92 or math.pow((r + 0.055) / 1.055, 2.4) end
-local function xyz_lab(t) return t > LAB.t3 and math.pow(t, 1 / 3) or t / LAB.t2 + LAB.t0 end
+local function lab_xyz(t)
+  return t > LAB.t1 and t * t * t or LAB.t2 * (t - LAB.t0)
+end
+local function rgb_xyz(r)
+  r = r / 255
+  return r <= 0.04045 and r / 12.92 or math.pow((r + 0.055) / 1.055, 2.4)
+end
+local function xyz_lab(t)
+  return t > LAB.t3 and math.pow(t, 1 / 3) or t / LAB.t2 + LAB.t0
+end
 
 local function lab2rgb(l, a, b)
   local y = (l + 16) / 116
@@ -71,10 +86,14 @@ function Color:darken(amount)
   return Color.rgb2hex(r, g, b)
 end
 
-function Color:brighten(amount) return self:darken(-amount) end
+function Color:brighten(amount)
+  return self:darken(-amount)
+end
 
 function Color.new(hex)
-  if not hex or hex == 'NONE' then return nil end
+  if not hex or hex == 'NONE' then
+    return nil
+  end
   local r, g, b = Color.hex2rgb(hex)
   local self = setmetatable({}, Color)
   self[1], self[2], self[3] = r, g, b

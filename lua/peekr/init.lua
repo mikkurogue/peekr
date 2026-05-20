@@ -14,7 +14,9 @@ local last_session = nil
 
 ---@param opts? table
 function Peekr.setup(opts)
-  if initialized then return end
+  if initialized then
+    return
+  end
   config.setup(opts, Peekr.actions)
   highlights.setup()
   lsp.setup()
@@ -22,7 +24,9 @@ function Peekr.setup(opts)
 end
 
 local function is_open()
-  if vim.tbl_isempty(peekr) then return false end
+  if vim.tbl_isempty(peekr) then
+    return false
+  end
   return (peekr.preview and peekr.preview:is_valid()) and (peekr.list and peekr.list:is_valid())
 end
 
@@ -101,8 +105,12 @@ end
 
 local function create(results, parent_buf, parent_win, params, method, enc)
   peekr = Peekr:create({
-    bufnr = parent_buf, winnr = parent_win, params = params,
-    results = results, method = method, offset_encoding = enc,
+    bufnr = parent_buf,
+    winnr = parent_win,
+    params = params,
+    results = results,
+    method = method,
+    offset_encoding = enc,
   })
 
   local aug = vim.api.nvim_create_augroup('Peekr', { clear = true })
@@ -123,18 +131,25 @@ local function create(results, parent_buf, parent_win, params, method, enc)
   })
 
   vim.api.nvim_create_autocmd('CursorMoved', {
-    group = aug, buffer = peekr.list.bufnr,
-    callback = function() peekr:update_preview(peekr.list:get_current_item()) end,
+    group = aug,
+    buffer = peekr.list.bufnr,
+    callback = function()
+      peekr:update_preview(peekr.list:get_current_item())
+    end,
   })
 
   vim.api.nvim_create_autocmd('WinClosed', {
     group = aug,
     pattern = { tostring(peekr.list.winnr), tostring(peekr.preview.winnr), tostring(parent_win) },
-    callback = function() Peekr.actions.close() end,
+    callback = function()
+      Peekr.actions.close()
+    end,
   })
 
   local debounced_resize = utils.debounce(function()
-    if is_open() then peekr:on_resize() end
+    if is_open() then
+      peekr:on_resize()
+    end
   end, 50)
 
   vim.api.nvim_create_autocmd('VimResized', {
@@ -156,8 +171,10 @@ local function open(opts)
 
     if is_open() then
       peekr.list:setup({
-        results = results, position_params = ctx.params,
-        method = opts.method, offset_encoding = client.offset_encoding,
+        results = results,
+        position_params = ctx.params,
+        method = opts.method,
+        offset_encoding = client.offset_encoding,
       })
       peekr.preview:clear_hl()
       peekr:update_preview(peekr.list:get_current_item())
@@ -192,9 +209,14 @@ Peekr.actions = {
   end,
   enter_win = function(win)
     return function()
-      if not is_open() then return end
-      if win == 'preview' then vim.api.nvim_set_current_win(peekr.preview.winnr)
-      elseif win == 'list' then vim.api.nvim_set_current_win(peekr.list.winnr) end
+      if not is_open() then
+        return
+      end
+      if win == 'preview' then
+        vim.api.nvim_set_current_win(peekr.preview.winnr)
+      elseif win == 'list' then
+        vim.api.nvim_set_current_win(peekr.list.winnr)
+      end
     end
   end,
   next = function()
@@ -217,10 +239,18 @@ Peekr.actions = {
       end)
     end
   end,
-  jump = function(opts) peekr:jump(opts) end,
-  jump_vsplit = function() peekr:jump({ cmd = 'vsplit' }) end,
-  jump_split = function() peekr:jump({ cmd = 'split' }) end,
-  jump_tab = function() peekr:jump({ cmd = 'tabe' }) end,
+  jump = function(opts)
+    peekr:jump(opts)
+  end,
+  jump_vsplit = function()
+    peekr:jump({ cmd = 'vsplit' })
+  end,
+  jump_split = function()
+    peekr:jump({ cmd = 'split' })
+  end,
+  jump_tab = function()
+    peekr:jump({ cmd = 'tabe' })
+  end,
   open = function(method, opts)
     Peekr.setup()
     open({ method = method, hooks = opts and opts.hooks })
@@ -230,9 +260,12 @@ Peekr.actions = {
     for _, group in pairs(peekr.list.groups) do
       for _, item in ipairs(group.items) do
         table.insert(items, {
-          bufnr = item.bufnr, filename = item.filename,
-          lnum = item.start_line + 1, end_lnum = item.end_line + 1,
-          col = item.start_col + 1, end_col = item.end_col + 1,
+          bufnr = item.bufnr,
+          filename = item.filename,
+          lnum = item.start_line + 1,
+          end_lnum = item.end_line + 1,
+          col = item.start_col + 1,
+          end_col = item.end_col + 1,
           text = item.full_text,
         })
       end
@@ -245,16 +278,29 @@ Peekr.actions = {
       vim.cmd.copen()
     end
   end,
-  toggle_fold = function() peekr:toggle_fold() end,
-  open_fold = function() peekr:toggle_fold(true) end,
-  close_fold = function() peekr:toggle_fold(false) end,
+  toggle_fold = function()
+    peekr:toggle_fold()
+  end,
+  open_fold = function()
+    peekr:toggle_fold(true)
+  end,
+  close_fold = function()
+    peekr:toggle_fold(false)
+  end,
   resume = function()
-    if not last_session then return utils.info('No previous Peekr session') end
+    if not last_session then
+      return utils.info('No previous Peekr session')
+    end
     local w = vim.api.nvim_get_current_win()
     local b = vim.api.nvim_get_current_buf()
-    create(last_session.results, b, w,
+    create(
+      last_session.results,
+      b,
+      w,
       vim.lsp.util.make_position_params(w, last_session.offset_encoding),
-      last_session.method, last_session.offset_encoding)
+      last_session.method,
+      last_session.offset_encoding
+    )
   end,
 }
 
@@ -267,8 +313,7 @@ function Peekr:create(opts)
   -- Create the backdrop window (provides the outer rounded border)
   local backdrop_buf = vim.api.nvim_create_buf(false, true)
   vim.bo[backdrop_buf].bufhidden = 'wipe'
-  local title = lsp.methods[opts.method]
-    and ('  ' .. utils.capitalize(lsp.methods[opts.method].label) .. ' ')
+  local title = lsp.methods[opts.method] and ('  ' .. utils.capitalize(lsp.methods[opts.method].label) .. ' ')
     or ('  ' .. opts.method .. ' ')
   local backdrop_win_opts = vim.tbl_extend('force', layout.backdrop, {
     title = title,
@@ -280,20 +325,24 @@ function Peekr:create(opts)
 
   -- Create list
   local list = require('peekr.list').create({
-    results = opts.results, parent_winnr = opts.winnr,
-    position_params = opts.params, method = opts.method,
-    win_opts = layout.list, offset_encoding = opts.offset_encoding,
+    results = opts.results,
+    parent_winnr = opts.winnr,
+    position_params = opts.params,
+    method = opts.method,
+    win_opts = layout.list,
+    offset_encoding = opts.offset_encoding,
   })
 
   -- Create separator buffer (single column of │)
   local sep_buf = vim.api.nvim_create_buf(false, true)
   vim.bo[sep_buf].bufhidden = 'wipe'
   local sep_lines = {}
-  for i = 1, layout.total_h do sep_lines[i] = '│' end
+  for i = 1, layout.total_h do
+    sep_lines[i] = '│'
+  end
   vim.api.nvim_buf_set_lines(sep_buf, 0, -1, false, sep_lines)
 
-  local sep_col = config.options.list.position == 'left'
-    and (layout.inner_col + layout.list.width)
+  local sep_col = config.options.list.position == 'left' and (layout.inner_col + layout.list.width)
     or (layout.inner_col + layout.preview.width)
   local sep_win = vim.api.nvim_open_win(sep_buf, false, {
     relative = 'editor',
@@ -311,20 +360,29 @@ function Peekr:create(opts)
   -- Create preview
   local first_item = list:get_current_item()
   local preview = require('peekr.preview').create({
-    parent_winnr = opts.winnr, parent_bufnr = opts.bufnr,
-    win_opts = layout.preview, preview_bufnr = first_item.bufnr,
+    parent_winnr = opts.winnr,
+    parent_bufnr = opts.bufnr,
+    win_opts = layout.preview,
+    preview_bufnr = first_item.bufnr,
   })
 
   last_session = {
-    results = opts.results, position_params = opts.params,
-    method = opts.method, offset_encoding = opts.offset_encoding,
+    results = opts.results,
+    position_params = opts.params,
+    method = opts.method,
+    offset_encoding = opts.offset_encoding,
   }
 
   local scope = {
-    list = list, preview = preview, push_tagstack = push,
-    parent_winnr = opts.winnr, parent_bufnr = opts.bufnr,
-    backdrop_win = backdrop_win, backdrop_buf = backdrop_buf,
-    sep_win = sep_win, sep_buf = sep_buf,
+    list = list,
+    preview = preview,
+    push_tagstack = push,
+    parent_winnr = opts.winnr,
+    parent_bufnr = opts.bufnr,
+    backdrop_win = backdrop_win,
+    backdrop_buf = backdrop_buf,
+    sep_win = sep_win,
+    sep_buf = sep_buf,
   }
   return setmetatable(scope, self)
 end
@@ -335,26 +393,36 @@ function Peekr:on_resize()
   pcall(vim.api.nvim_win_set_config, self.preview.winnr, layout.preview)
   pcall(vim.api.nvim_win_set_config, self.backdrop_win, layout.backdrop)
 
-  local sep_col = config.options.list.position == 'left'
-    and (layout.inner_col + layout.list.width)
+  local sep_col = config.options.list.position == 'left' and (layout.inner_col + layout.list.width)
     or (layout.inner_col + layout.preview.width)
   pcall(vim.api.nvim_win_set_config, self.sep_win, {
-    relative = 'editor', width = 1, height = layout.total_h,
-    row = layout.inner_row, col = sep_col,
+    relative = 'editor',
+    width = 1,
+    height = layout.total_h,
+    row = layout.inner_row,
+    col = sep_col,
   })
 end
 
 function Peekr:jump(opts)
   opts = opts or {}
   local item = self.list:get_current_item()
-  if not item or item.is_unreachable then return end
-  if item.is_group then return self.list:toggle_fold(item) end
+  if not item or item.is_unreachable then
+    return
+  end
+  if item.is_group then
+    return self.list:toggle_fold(item)
+  end
 
   self:close()
   self.push_tagstack()
 
   if opts.cmd then
-    if type(opts.cmd) == 'function' then opts.cmd(item) else vim.cmd(opts.cmd) end
+    if type(opts.cmd) == 'function' then
+      opts.cmd(item)
+    else
+      vim.cmd(opts.cmd)
+    end
   end
 
   if vim.fn.buflisted(item.bufnr) == 1 then
@@ -369,10 +437,16 @@ end
 
 function Peekr:toggle_fold(expand)
   local item = self.list:get_current_item()
-  if not item or self.list:is_flat() then return end
-  if expand == nil then return self.list:toggle_fold(item)
-  elseif expand then return self.list:open_fold(item)
-  else return self.list:close_fold(item) end
+  if not item or self.list:is_flat() then
+    return
+  end
+  if expand == nil then
+    return self.list:toggle_fold(item)
+  elseif expand then
+    return self.list:open_fold(item)
+  else
+    return self.list:close_fold(item)
+  end
 end
 
 function Peekr:update_preview(item)
@@ -383,7 +457,9 @@ end
 
 function Peekr:close()
   local hooks = config.options.hooks or {}
-  if type(hooks.before_close) == 'function' then hooks.before_close() end
+  if type(hooks.before_close) == 'function' then
+    hooks.before_close()
+  end
 
   if Peekr._cleanup and Peekr._cleanup > 0 then
     pcall(vim.api.nvim_del_autocmd, Peekr._cleanup)
@@ -399,13 +475,19 @@ function Peekr:close()
 
   -- Close backdrop and separator
   pcall(function()
-    if vim.api.nvim_win_is_valid(self.sep_win) then vim.api.nvim_win_close(self.sep_win, true) end
+    if vim.api.nvim_win_is_valid(self.sep_win) then
+      vim.api.nvim_win_close(self.sep_win, true)
+    end
   end)
   pcall(function()
-    if vim.api.nvim_win_is_valid(self.backdrop_win) then vim.api.nvim_win_close(self.backdrop_win, true) end
+    if vim.api.nvim_win_is_valid(self.backdrop_win) then
+      vim.api.nvim_win_close(self.backdrop_win, true)
+    end
   end)
 
-  if type(hooks.after_close) == 'function' then vim.schedule(hooks.after_close) end
+  if type(hooks.after_close) == 'function' then
+    vim.schedule(hooks.after_close)
+  end
 end
 
 function Peekr:destroy()
@@ -426,8 +508,10 @@ Peekr.register_method = function(method)
     return utils.error(("Method '%s' already registered"):format(method.name))
   end
   lsp.methods[method.name] = {
-    label = method.label, lsp_method = method.method,
-    non_standard = true, transform = method.transform,
+    label = method.label,
+    lsp_method = method.method,
+    non_standard = true,
+    transform = method.transform,
   }
 end
 

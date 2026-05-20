@@ -33,7 +33,9 @@ function List.create(opts)
 
   local list = List:new(bufnr, winnr)
   for k, v in pairs(win_opts_tbl) do
-    pcall(function() vim.wo[winnr][k] = v end)
+    pcall(function()
+      vim.wo[winnr][k] = v
+    end)
   end
   vim.bo[bufnr].bufhidden = 'wipe'
   vim.bo[bufnr].buftype = 'nofile'
@@ -70,7 +72,9 @@ end
 -- Location processing helpers
 
 local function is_starting_location(params, uri, range)
-  if not params.position or uri ~= params.textDocument.uri then return false end
+  if not params.position or uri ~= params.textDocument.uri then
+    return false
+  end
   local r = Range:new(range.start.line, range.start.character, range.finish.line, range.finish.character)
   return r:contains({ line = params.position.line, col = params.position.character })
 end
@@ -88,14 +92,20 @@ local function get_preview_line(range, offset, text)
 end
 
 local function sort_by_position(a, b)
-  if a.start.line ~= b.start.line then return a.start.line < b.start.line end
+  if a.start.line ~= b.start.line then
+    return a.start.line < b.start.line
+  end
   return a.start.character < b.start.character
 end
 
 local function process_locations(locations, position_params, offset_encoding)
   local result = {}
   local grouped = setmetatable({}, {
-    __index = function(t, k) local v = {}; rawset(t, k, v); return v end,
+    __index = function(t, k)
+      local v = {}
+      rawset(t, k, v)
+      return v
+    end,
   })
 
   for _, loc in ipairs(locations) do
@@ -115,7 +125,9 @@ local function process_locations(locations, position_params, offset_encoding)
     result[filename] = { filename = filename, uri = uri, items = {} }
 
     local uri_rows = {}
-    for _, pos in ipairs(rows) do table.insert(uri_rows, pos.start.line) end
+    for _, pos in ipairs(rows) do
+      table.insert(uri_rows, pos.start.line)
+    end
     local lines = utils.get_lines(bufnr, uri, uri_rows)
 
     for index, pos in ipairs(rows) do
@@ -130,17 +142,27 @@ local function process_locations(locations, position_params, offset_encoding)
         sc = utils.get_line_byte_from_position(line, pos.start, offset_encoding)
         ec = utils.get_line_byte_from_position(line, pos.finish, offset_encoding)
         preview_line = get_preview_line({
-          start_line = pos.start.line, start_col = sc,
-          end_col = ec, end_line = pos.finish.line,
+          start_line = pos.start.line,
+          start_col = sc,
+          end_col = ec,
+          end_line = pos.finish.line,
         }, 8, line)
       end
 
       table.insert(result[filename].items, {
-        filename = filename, bufnr = bufnr, index = index, uri = uri,
-        preview_line = preview_line, is_unreachable = is_unreachable,
-        full_text = line or '', start_line = pos.start.line, end_line = pos.finish.line,
-        start_col = sc, end_col = ec,
-        is_starting = position_params and position_params.textDocument
+        filename = filename,
+        bufnr = bufnr,
+        index = index,
+        uri = uri,
+        preview_line = preview_line,
+        is_unreachable = is_unreachable,
+        full_text = line or '',
+        start_line = pos.start.line,
+        end_line = pos.finish.line,
+        start_col = sc,
+        end_col = ec,
+        is_starting = position_params
+          and position_params.textDocument
           and is_starting_location(position_params, uri, { start = pos.start, finish = pos.finish }),
       })
     end
@@ -152,13 +174,17 @@ local function find_starting_group(groups, params)
   local fallback
   for _, group in pairs(groups) do
     for _, item in ipairs(group.items) do
-      if item.is_starting then return group, item end
+      if item.is_starting then
+        return group, item
+      end
     end
     if not fallback and params and params.textDocument and params.textDocument.uri == group.uri then
       fallback = { group = group, item = group.items[1] }
     end
   end
-  if fallback then return fallback.group, fallback.item end
+  if fallback then
+    return fallback.group, fallback.item
+  end
   local _, g = next(groups)
   return g, g.items[1]
 end
@@ -171,7 +197,9 @@ function List:setup(opts)
   folds.open(group.filename)
   self:update(self.groups)
 
-  local _, line = utils.tbl_find(self.items, function(item) return vim.deep_equal(item, location) end)
+  local _, line = utils.tbl_find(self.items, function(item)
+    return vim.deep_equal(item, location)
+  end)
 
   if self.winbar then
     local label = lsp.methods[opts.method] and utils.capitalize(lsp.methods[opts.method].label) or opts.method
@@ -179,7 +207,9 @@ function List:setup(opts)
   end
 
   vim.api.nvim_win_set_cursor(self.winnr, { line or 1, 1 })
-  vim.schedule(function() vim.cmd('norm! zz') end)
+  vim.schedule(function()
+    vim.cmd('norm! zz')
+  end)
 end
 
 function List:update(groups)
@@ -191,8 +221,12 @@ function List:update(groups)
 end
 
 function List:close()
-  if vim.api.nvim_win_is_valid(self.winnr) then vim.api.nvim_win_close(self.winnr, true) end
-  if vim.api.nvim_buf_is_valid(self.bufnr) then vim.api.nvim_buf_delete(self.bufnr, {}) end
+  if vim.api.nvim_win_is_valid(self.winnr) then
+    vim.api.nvim_win_close(self.winnr, true)
+  end
+  if vim.api.nvim_buf_is_valid(self.bufnr) then
+    vim.api.nvim_buf_delete(self.bufnr, {})
+  end
   folds.reset()
 end
 
@@ -207,7 +241,10 @@ function List:render(groups)
   if vim.tbl_count(groups) > 1 then
     for filename, group in pairs(groups) do
       self.items[r.line_nr + 1] = {
-        filename = filename, uri = group.uri, is_group = true, count = #group.items,
+        filename = filename,
+        uri = group.uri,
+        is_group = true,
+        count = #group.items,
       }
       local icon = folds.is_folded(filename) and icons.fold_closed or icons.fold_open
       r:append((' %s '):format(icon), 'FoldIcon')
@@ -256,7 +293,9 @@ function List:render_locations(locations, renderer, indent)
         for i = 1, #tail do
           local ch = tail:sub(i, i)
           local cw = vim.fn.strdisplaywidth(ch)
-          if w + cw > max_name_w then break end
+          if w + cw > max_name_w then
+            break
+          end
           trimmed = trimmed .. ch
           w = w + cw
         end
@@ -271,18 +310,28 @@ function List:render_locations(locations, renderer, indent)
   end
 end
 
-function List:get_line() return vim.api.nvim_win_get_cursor(self.winnr)[1] end
-function List:get_col() return vim.api.nvim_win_get_cursor(self.winnr)[2] end
-function List:get_current_item() return self.items[self.get_line and self:get_line() or 1] end
+function List:get_line()
+  return vim.api.nvim_win_get_cursor(self.winnr)[1]
+end
+function List:get_col()
+  return vim.api.nvim_win_get_cursor(self.winnr)[2]
+end
+function List:get_current_item()
+  return self.items[self.get_line and self:get_line() or 1]
+end
 
 function List:walk(opts)
   local idx = opts.start
   return function()
     local count = vim.api.nvim_buf_line_count(self.bufnr)
     idx = idx + (opts.backwards and -1 or 1)
-    if opts.cycle then idx = ((idx - 1) % count) + 1 end
+    if opts.cycle then
+      idx = ((idx - 1) % count) + 1
+    end
     local item = self.items[idx]
-    if not item or idx > count then return nil end
+    if not item or idx > count then
+      return nil
+    end
     return idx, item
   end
 end
@@ -321,20 +370,30 @@ function List:get_active_group(opts)
   return self.groups[loc.filename]
 end
 
-function List:is_flat() return vim.tbl_count(self.groups) == 1 end
+function List:is_flat()
+  return vim.tbl_count(self.groups) == 1
+end
 
 function List:toggle_fold(item)
-  if folds.is_folded(item.filename) then self:open_fold(item) else self:close_fold(item) end
+  if folds.is_folded(item.filename) then
+    self:open_fold(item)
+  else
+    self:close_fold(item)
+  end
 end
 
 function List:open_fold(item)
-  if not folds.is_folded(item.filename) then return end
+  if not folds.is_folded(item.filename) then
+    return
+  end
   folds.open(item.filename)
   self:update(self.groups)
 end
 
 function List:close_fold(item)
-  if folds.is_folded(item.filename) then return end
+  if folds.is_folded(item.filename) then
+    return
+  end
   local cur = self:get_line()
   folds.close(item.filename)
   self:update(self.groups)
